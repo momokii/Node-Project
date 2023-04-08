@@ -1,0 +1,66 @@
+<%- include('../includes/header.ejs') %>>
+
+		<div class="container">
+
+			<div class="row justify-content-center">
+				<div class="col-md-6 text-center mb-5">
+					<h2 class="heading-section">Login Page</h2>
+				</div>
+			</div>
+
+			<div class="row justify-content-center">
+				<div class="col-md-6 col-lg-5">
+
+					<% if(message) { %>
+						<h5 class="text-center mb-4"><%= message %> </h5>
+					<% } %>
+
+					<% if(errorMessage) { %>
+						<h5 class="text-center mb-4"><%= errorMessage %> </h5>
+					<% } %>
+
+					<div class="login-wrap p-4 p-md-5">
+
+						<div class="icon d-flex align-items-center justify-content-center">
+							<span class="fa fa-user-o"></span>
+						</div>
+
+						<h3 class="text-center mb-4">Halo, Silahkan Login!</h3>
+
+						<form action="/login" class="login-form" method="post">
+
+							<input type="hidden" name="_csrf" value="<%= csrfToken %>" >
+
+							<div class="form-group">
+								<input type="email" class="form-control rounded-left" name="email" placeholder="Email" required value="<%= oldInput.email %>">
+							</div>
+							<div class="form-group d-flex">
+							  <input type="password" class="form-control rounded-left" name="password" placeholder="Password" required>
+							</div>
+							<div class="form-group d-md-flex">
+								<div class="w-50 text-md-left">
+									<a href="/daftar">Daftar Akun</a>
+								</div>
+								<div class="w-50 text-md-right">
+									<a href="/reset_password">Reset Password</a>
+								</div>
+							</div>
+							<div class="form-group">
+								<button type="submit" class="btn btn-primary rounded submit p-3 px-5">Login</button>
+							</div>
+					  </form>
+
+	        		</div>
+				</div>
+			</div>
+		</div>
+	</section>
+
+<!--	<script src="js/jquery.min.js"></script>-->
+<!--  <script src="js/popper.js"></script>-->
+<!--  <script src="js/bootstrap.min.js"></script>-->
+<!--  <script src="js/main.js"></script>-->
+
+	</body>
+</html>
+

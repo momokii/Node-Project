@@ -1,0 +1,66 @@
+<%- include('includes/header.ejs') %>
+
+		<div class="container">
+
+			<div class="row justify-content-center">
+				<div class="col-md-6 text-center mb-5">
+					<h2 class="heading-section">Akun</h2>
+				</div>
+			</div>
+
+			<div class="row justify-content-center">
+				<div class="col-md-6 col-lg-5">
+
+					<% if(message) { %>
+						<h3 class="text-center mb-4"><%= message %></h3>
+					<% } %>
+
+					<div class="login-wrap p-4 p-md-5">
+
+						<div class="icon d-flex align-items-center justify-content-center">
+							<span class="fa fa-user-o"></span>
+						</div>
+
+						<h3 class="text-center mb-4">Halo, <%= user.nama %></h3>
+
+						<form action="/logout" class="login-form" method="post">
+
+							<input type="hidden" name="_csrf" value="<%= csrfToken %>">
+
+							<div class="form-group d-md-flex">
+								<div class="w-20 text-md-left">
+									<a href="/change_name">Ganti Nama</a>
+								</div>
+							</div>
+
+							<div class="form-group d-md-flex">
+								<div class="w-20 text-md-left">
+									<a href="/change_password">Ganti Password</a>
+								</div>
+							</div>
+
+							<div class="form-group d-md-flex">
+								<div class="w-20 text-md-left">
+									<a href="/delete_account">Hapus Akun</a>
+								</div>
+							</div>
+
+							<div class="form-group">
+								<button type="submit" class="btn btn-primary rounded submit p-3 px-5">Logout</button>
+							</div>
+					  </form>
+
+	        		</div>
+				</div>
+			</div>
+		</div>
+	</section>
+
+<!--	<script src="js/jquery.min.js"></script>-->
+<!--  <script src="js/popper.js"></script>-->
+<!--  <script src="js/bootstrap.min.js"></script>-->
+<!--  <script src="js/main.js"></script>-->
+
+	</body>
+</html>
+

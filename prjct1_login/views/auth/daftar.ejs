@@ -1,0 +1,65 @@
+<%- include('../includes/header.ejs') %>
+
+		<div class="container">
+
+			<div class="row justify-content-center">
+				<div class="col-md-6 text-center mb-5">
+
+					<% if(errorMessage) { %>
+						<h2 class="text-center mb-4"> <%= errorMessage %> </h2>
+					<% } %>
+
+					<h2 class="heading-section">Daftar Akun</h2>
+				</div>
+			</div>
+
+			<div class="row justify-content-center">
+				<div class="col-md-6 col-lg-5">
+					<div class="login-wrap p-4 p-md-5">
+
+						<div class="icon d-flex align-items-center justify-content-center">
+							<span class="fa fa-user-o"></span>
+						</div>
+
+						<h3 class="text-center mb-4">Halo, Silahkan Daftarkan Akun Anda!</h3>
+
+						<form action="/daftar" class="login-form" method="post">
+
+							<input type="hidden" name="_csrf" value="<%= csrfToken %>">
+
+							<div class="form-group">
+								<input type="text" class="form-control rounded-left" name="nama" placeholder="Nama" value="<%= oldInput.nama %>" required minlength="3">
+							</div>
+							<div class="form-group">
+								<input type="email" class="form-control rounded-left" name="email" placeholder="Email" value="<%= oldInput.email %>" required>
+							</div>
+							<div class="form-group d-flex">
+							  <input type="password" class="form-control rounded-left" name="password" placeholder="Password" value="<%= oldInput.password %>" required minlength="6">
+							</div>
+							<div class="form-group d-flex">
+								<input type="password" class="form-control rounded-left" name="passwordKonfir" placeholder="Konfirmasi Password" value="<%= oldInput.passwordKonfir %>" required minlength="6">
+							</div>
+							<div class="form-group d-md-flex">
+								<div class="w-50 text-md-left">
+									<a href="/login">Login Disini!</a>
+								</div>
+							</div>
+							<div class="form-group">
+								<button type="submit" class="btn btn-primary rounded submit p-3 px-5">Daftar Akun</button>
+							</div>
+					  </form>
+
+	        		</div>
+				</div>
+			</div>
+		</div>
+	</section>
+
+<!--	<script src="js/jquery.min.js"></script>-->
+<!--  <script src="js/popper.js"></script>-->
+<!--  <script src="js/bootstrap.min.js"></script>-->
+<!--  <script src="js/main.js"></script>-->
+
+	</body>
+</html>
+
