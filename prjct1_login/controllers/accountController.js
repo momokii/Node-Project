@@ -1,269 +1,100 @@
 //* import dependencies
-const { validationResult } = require('express-validator')
-const { ObjectId } = require('mongodb')
+const {validationResult} = require('express-validator')
 const bcrypt = require('bcryptjs')
-const jwt = require('jsonwebtoken')
-const flashController = require('../util/flash_controller')
-const deepEqual = require('deep-equal')
-const httpStatus = require('../util/httpStatus').httpStatus_keyValue
+const flashMessage = require('../util/flash_controller')
+const crypto = require('crypto')
 const mailjet = require('node-mailjet').apiConnect('API_KEY', 'API_SECRET')
+const httpStatus = require('../util/httpStatus').httpStatus_keyValue
+
+//* set Transporter email
+const FROM_EMAIL = 'FROM_EMAIL'
+
+
 //* import models
 const User = require('../models/users')
 
 
-//* const DEFINED
-const FROM_EMAIL = "FROM_EMAIL"
-const SECRET_KEY_JWT = "JWT_SECRET"
-
-
 
 // * **********************================= GET GET GET =================**********************
+exports.getInfo = (req, res, next) => {
 
-exports.getLogin = (req, res, next) => {
-    let messageFlash = flashController.getMessageFlash(req.flash('message'))
-    res.render('auth/login', {
-        pageTitle: 'Login',
-        message: messageFlash,
-        errorMessage: null,
-        oldInput: {email : ''}
+    let message = flashMessage.getMessageFlash(req.flash('message'))
+
+    res.render('index', {
+        pageTitle: 'Info AKun',
+        user : {
+            email: req.user.email,
+            nama: req.user.nama
+        },
+        message: message
     })
 }
 
-exports.getDaftarAkun = (req, res, next) => {
-    let message = flashController.getMessageFlash(req.flash('error'))
+exports.getChangeName = (req, res, next) => {
+    const message = flashMessage.getMessageFlash(req.flash('error'))
 
-    res.render('auth/daftar', {
-        pageTitle: 'Daftar Akun',
+    res.render('account/changeName', {
+        pageTitle: 'Ganti Nama',
         errorMessage: message,
-        oldInput: { email: '', password: '', passwordkonfir: '', nama: '' }
+        user: {
+            nama: req.user.nama
+        }
     })
 }
 
-exports.getResetPasswordEmail = (req, res, next) => {
-    let message = flashController.getMessageFlash(req.flash('error'))
 
-    res.render('auth/resetPassEmail', {
-        pageTitle: 'Email Reset Password',
-        errorMessage: message
+exports.getChangePassword = (req, res, next) => {
+    const message = flashMessage.getMessageFlash(req.flash('error'))
+
+    res.render('account/changePassword', {
+        pageTitle: 'Ganti Password',
+        errorMessage: message,
+        user: {
+            nama: req.user.nama
+        }
     })
 }
 
-exports.getNewPassword = (req, res, next) => {
-    const token = req.params.tokenId
 
-    let message = flashController.getMessageFlash(req.flash('error'))
-    async function getNewPass() {
-        try {
-            const user = await User.findOne({ 'token.reset' : token })
-            if(!user) {
-                return next(new Error('User tidak ada'))
-            }
-            const dataToken = {
-                id: user._id.toString(),
-                email: user.email,
-                password: user.password
-            }
-            await jwt.verify(token, SECRET_KEY_JWT, (err, decoded) => {
+exports.getDeleteAccount = (req, res, next) => {
+    let message = flashMessage.getMessageFlash(req.flash('message'))
 
-                if(err){
-                    req.flash('message', 'Gagal!, Token Error / Salah / Kedaluarsa!')
-                    res.redirect('/login')
-                }
-
-                const userDataToken = {
-                    id: decoded.id,
-                    email: decoded.email,
-                    password: decoded.password
-                }
-
-                if(deepEqual(dataToken, userDataToken)) {
-                    return res.render('auth/resetPass', {
-                        pageTitle: 'Reset Password',
-                        errorMessage: message,
-                        idUser: user._id,
-                        token: token
-                    })
-                }
-
-                return next(new Error('Token tidak valid'))
-            })
-
-        } catch (e) {
-            console.log(e)
-            return next(new Error(e))
+    res.render('account/deleteAccount', {
+        pageTitle: 'Hapus Account',
+        message: message,
+        user: {
+            nama: req.user.nama
         }
-    }
-    getNewPass()
-
+    })
 }
 
 
-
-// * **********************============== POST POST POST ==============**********************
-
-exports.postDaftar = (req, res, next) => {
-    const email = req.body.email
-    const nama = req.body.nama
-    const password = req.body.password
-
-    const invalidDataRender = (errorMessage) => {
-        res.status(httpStatus['400_bad_request']).render('auth/daftar', {
-            pageTitle: 'Daftar Akun',
-            errorMessage: errorMessage,
-            oldInput: { email: email, nama: nama }
-        })
-    }
-
-    //* cek error validasi input
-    const errors = validationResult(req)
-    if(!errors.isEmpty())  {
-        console.log(errors.array())
-        return invalidDataRender(errors.array()[0].msg)
-    }
-
-    //* tambah user
-    async function tambahUser() {
-        try {
-            const hashingPass = await bcrypt.hash(password, 16)
-            const user = new User({
-                email: email,
-                nama: nama,
-                password: hashingPass
-            })
-            await user.save()
-
-            req.flash('message', 'Akun Anda berhasil dibuat, silahkan login!')
-            res.redirect('/login')
-            return await mailjet
-                .post("send", {'version': 'v3.1'})
-                .request({
-                    "Messages":[
-                        {
-                            "From": {
-                                "Email": FROM_EMAIL,
-                                "Name": "Auth Login"
-                            },
-                            "To": [
-                                {
-                                    "Email": email,
-                                    "Name": nama
-                                }
-                            ],
-                            "Subject": 'Berhasil Daftar Akun',
-                            "TextPart": "Congrats!",
-                            "HTMLPart": '<h4>Selamat!, Anda berhasil mendaftarkan Anda!</h4>',
-                            "CustomID": "AppGettingStartedTest"
-                        }
-                    ]
-                })
-
-        } catch (error) {
-            console.log(error)
-            return next(new Error(error))
-        }
-    }
-    tambahUser()
-
-}
-
-
-exports.postLogin = (req, res, next) => {
-    const email = req.body.email
-    const password = req.body.password
-
-    const invalidDataRender = (errorMessage) => {
-        res.status(httpStatus['400_bad_request']).render('auth/login', {
-            pageTitle: 'Login',
-            message: null,
-            errorMessage: errorMessage,
-            oldInput: { email: email }
-        })
-    }
-
-    const errors = validationResult(req)
-    if(!errors.isEmpty()) {
-        console.log(errors.array())
-        return invalidDataRender(errors.array()[0].msg)
-    }
-
-    //* login process
-    async function login(){
+exports.getDeleteAccountToken = (req, res, next) => {
+    async function getTokenDeleteAccount() {
         try{
-            const user = await User.findOne({email : email})
-            if (!user){
-                return invalidDataRender('Email atau Password Salah!')
-            }
-            const passwordMatch = await bcrypt.compare(password, user.password)
-            if(!passwordMatch) {
-                return invalidDataRender('Email atau Password Salah!')
+            const user = await User.findOne({email: req.user.email})
+            if (!user) {
+                req.flash('message', 'Gagal, Terjadi Kesalahan saat mencari info Akun!')
+                return res.redirect('/delete_account')
             }
 
-            req.session.user = user
-            req.session.isLoggedIn = true
-
-            await req.session.save()
-            return res.redirect('/')
-
-        } catch (e) {
-            console.log(e)
-            return next(new Error(e))
-        }
-    }
-    login()
-
-}
-
-
-exports.postLogout = (req, res, next) => {
-    req.session.destroy(err => {
-        console.log(err)
-        res.redirect('/login')
-    })
-}
-
-
-exports.postResetEmail = (req, res, next) => {
-    const email = req.body.email
-
-    const invalidTokenRender = (message) => {
-        res.status(httpStatus['400_bad_request']).render('auth/resetPassEmail', {
-            pageTitle: 'Email Reset Password',
-            errorMessage: message
-        })
-    }
-
-    const errors = validationResult(req)
-    if(!errors.isEmpty()) {
-        console.log(errors)
-        return invalidTokenRender(errors.array()[0].msg)
-    }
-    //* proses kirim token
-    async function kirimToken() {
-        try {
-            const user = await User.findOne({email : email})
-            if(!user) {
-                return invalidTokenRender('Akun tidak ditemukan pada email yang diinputkan, silahkan coba lagi!')
+            if (user.token.deleteAccountInterval != null && user.token.deleteAccountInterval > Date.now()) {
+                req.flash('message', 'Gagal, Hanya bisa minta token dalam 10 menit sekali!')
+                return res.redirect('/delete_account')
             }
 
-            if(user.token.reset && user.token.resetTokenInterval > Date.now()){
-                return invalidTokenRender('Permintaan token reset password pada email yang sama maksimal 1 kali tiap 10 menit')
-            }
+            const tokenDelete = crypto.randomBytes(16).toString('hex')
 
-            const dataToken = {
-                id: user._id,
-                email: user.email,
-                password: user.password
-            }
-            const token = jwt.sign(dataToken, SECRET_KEY_JWT, {
-                expiresIn:'1h'
-            })
-            user.token.reset = token
-            user.token.resetTokenInterval = Date.now() + (1000 * 60 * 10)
+            user.token.deleteAccount = tokenDelete
+            user.token.deleteAccountInterval = Date.now() + (1000 * 60 * 10) //* 10 menit
+            user.token.deleteAccountExp = Date.now() + (1000 * 60 * 60) //* 1 jam
             await user.save()
+            req.user = user
+            req.session.user = user
 
-            req.flash('message', 'Berhasil minta reset password, check email Anda!')
-            res.redirect('/login')
-            return await mailjet
+            req.flash('message', 'Berhasil set Token Hapus, silahkan cek email untuk dapatkan token Anda!')
+            res.redirect('/delete_account')
+            return  await mailjet
                 .post("send", {'version': 'v3.1'})
                 .request({
                     "Messages":[
@@ -274,37 +105,41 @@ exports.postResetEmail = (req, res, next) => {
                             },
                             "To": [
                                 {
-                                    "Email": req.body.email,
+                                    "Email": req.user.email,
                                     "Name": user.nama
                                 }
                             ],
-                            "Subject": 'Reset Password Confirmation!',
-                            "TextPart": "Reset Pass",
-                            "HTMLPart": `<p>Anda meminta reset password</p> <p>Click <a href="http://localhost:3000/reset_password/${token}">Link Ini</a> untuk set password baru</p> <p>Link terlampir hanya berlaku 1 Jam</p>`,
+                            "Subject": 'Token Hapus Akun',
+                            "TextPart": "Token",
+                            "HTMLPart": `<p>Kode Hapus Account Anda </p> <br> <h3>Token : ${tokenDelete}</h3> <br> <p>Silahkan tulis kode Anda dikolom yang disediakan</p> <p>Kode berlaku Satu Jam </p>`,
                             "CustomID": "AppGettingStartedTest"
                         }
                     ]
                 })
-
 
         } catch (e) {
             console.log(e)
             return next(new Error(e))
         }
     }
-    kirimToken()
+    getTokenDeleteAccount()
 
 }
 
 
-exports.postNewPassword = (req, res, next) => {
-    const password = req.body.password
-    const token = req.body.token
-    const userId = req.body.idUser
+
+
+// * **********************================= POST POST POST =================**********************
+
+exports.postChangeName = (req, res, next) => {
+    const newName = req.body.nama
 
     const invalidRender = (message) => {
-        req.flash('error', message)
-        res.redirect('/reset_password/' + token)
+        res.status(httpStatus['400_bad_request']).render('account/changeName', {
+            pageTitle: 'Ganti Nama',
+                errorMessage: message,
+                user: { nama: req.user.nama }
+        })
     }
 
     const errors = validationResult(req)
@@ -313,40 +148,128 @@ exports.postNewPassword = (req, res, next) => {
         return invalidRender(errors.array()[0].msg)
     }
 
-    async function gantiPassword() {
+    async function changeName() {
         try {
-            const checkToken = jwt.verify(token, SECRET_KEY_JWT)
-
-            if(checkToken) {
-                const user = await User.findOne({ _id: new ObjectId(userId) })
-
-                const match = await bcrypt.compare(password, user.password)
-                if(match){
-                    return invalidRender('Gagal!, Anda set password baru Anda sama dengan password lama, silahkan coba password lain')
-                }
-
-                const newPassHash = await bcrypt.hash(password, 16)
-
-                user.password = newPassHash
-                user.token.reset = null
-
-                await user.save()
-                req.flash('message', 'Anda berhasil ganti password!')
-                return res.redirect('/login')
+            const user = await User.findOne({email : req.user.email})
+            if(!user){
+                return invalidRender('Error saat mengganti nama')
             }
 
-            return next(new Error('Token Error!'))
+            user.nama = newName
+            req.user.nama = newName
+            req.session.user.nama = newName
+            await user.save()
+
+            req.flash('message', 'berhasil ganti nama Anda menjadi ' + newName)
+            return res.redirect('/')
 
         } catch (e) {
             console.log(e)
             return next(new Error(e))
         }
     }
-    gantiPassword()
+    changeName()
+}
+
+
+
+exports.postChangePassword = (req, res, next) => {
+    const oldPassword = req.body.passwordLama
+    const newPassword = req.body.passwordBaru
+
+    const invalidRender = (message) => {
+        res.status(httpStatus['400_bad_request']).render('account/changePassword', {
+            pageTitle: 'Ganti Password',
+            errorMessage: message,
+            user: {
+                nama: req.user.nama
+            }
+        })
+    }
+
+    const errors = validationResult(req)
+    if(!errors.isEmpty()){
+        console.log(errors.array())
+        return invalidRender(errors.array()[0].msg)
+    }
+
+    async function changePassword(){
+        try {
+            const user = await User.findOne({email : req.user.email})
+            const checkPass = await bcrypt.compare(oldPassword, user.password)
+            if(!checkPass){
+                return invalidRender('Gagal!, Password Lama tidak sesuai dengan password Anda!')
+            }
+
+            if(oldPassword === newPassword){
+                return invalidRender('Gagal!, Anda set password baru sama dengan password lama Anda, coba password lain')
+            }
+
+            const newHashPass = await bcrypt.hash(newPassword, 16)
+            user.password = newHashPass
+            req.user.password = newHashPass
+            req.session.user.password = newHashPass
+            await user.save()
+
+            req.flash('message', "Berhasil ubah password Akun Anda!")
+            return res.redirect('/')
+
+        } catch(e) {
+            console.log(e)
+            return next(new Error(e))
+        }
+    }
+    changePassword()
 
 }
 
 
+
+exports.postDeleteAccountConfirm = (req, res, next) => {
+    const token = req.body.tokenHapusAkun
+
+    const invalidRender = (message) => {
+        res.status(httpStatus['400_bad_request']).render('account/deleteAccount', {
+            pageTitle: 'Hapus Account',
+            message: message,
+            user: {
+                nama: req.user.nama
+            }
+        })
+    }
+
+    async function deleteAccountConfirm(){
+        try{
+            if(token !== req.user.token.deleteAccount) {
+                console.log(token)
+                console.log(req.user.token.deleteAccount)
+                return invalidRender('Gagal, Kode tidak valid!')
+            }
+
+            if(Date.now() > req.user.token.deleteAccountExp){
+                console.log(Date.now())
+                console.log(req.user.token.deleteAccountExp)
+                return invalidRender('Gagal, Token sudah kedaluarsa, silahkan minta token lagi!')
+            }
+            const user = await User.findOneAndDelete({'token.deleteAccount' : token})
+            if(!user) {
+                return invalidRender('Gagal, Token salah!')
+            }
+
+            req.session.destroy()
+            return res.render('account/deleteAccountSuccess', {
+                pageTitle: 'Berhasil Hapus Akun',
+                email: user.email
+            })
+
+        } catch(e) {
+            console.log(e)
+            return next(new Error(e))
+        }
+    }
+    deleteAccountConfirm()
+
+}
 
 
 
