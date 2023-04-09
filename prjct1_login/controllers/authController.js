@@ -5,23 +5,16 @@ const bcrypt = require('bcryptjs')
 const jwt = require('jsonwebtoken')
 const flashController = require('../util/flash_controller')
 const deepEqual = require('deep-equal')
-const nodemailer = require('nodemailer')
-const sendgridTransport = require('nodemailer-sendgrid-transport')
 const httpStatus = require('../util/httpStatus').httpStatus_keyValue
-
+const mailjet = require('node-mailjet').apiConnect('API_KEY', 'API_SECRET')
 //* import models
 const User = require('../models/users')
 
-//* const DEFINED
-const FROM_EMAIL = "YOUR_EMAIL"
-const SECRET_KEY_JWT = "SECRET_KEY"
 
-//* config sendgrid / mail sender
-const transporter = nodemailer.createTransport(sendgridTransport({
-    auth: {
-        api_key: 'API_KEY'
-    }
-}))
+//* const DEFINED
+const FROM_EMAIL = "FROM_EMAIL"
+const SECRET_KEY_JWT = "JWT_SECRET"
+
 
 
 // * **********************================= GET GET GET =================**********************
@@ -141,12 +134,28 @@ exports.postDaftar = (req, res, next) => {
 
             req.flash('message', 'Akun Anda berhasil dibuat, silahkan login!')
             res.redirect('/login')
-            return transporter.sendMail({
-                to: email,
-                from: FROM_EMAIL,
-                subject: 'Berhasil Daftar Akun',
-                html: '<h4>Selamat!, Anda berhasil mendaftarkan Anda!</h4>'
-            })
+            return await mailjet
+                .post("send", {'version': 'v3.1'})
+                .request({
+                    "Messages":[
+                        {
+                            "From": {
+                                "Email": FROM_EMAIL,
+                                "Name": "Auth Login"
+                            },
+                            "To": [
+                                {
+                                    "Email": email,
+                                    "Name": nama
+                                }
+                            ],
+                            "Subject": 'Berhasil Daftar Akun',
+                            "TextPart": "Congrats!",
+                            "HTMLPart": '<h4>Selamat!, Anda berhasil mendaftarkan Anda!</h4>',
+                            "CustomID": "AppGettingStartedTest"
+                        }
+                    ]
+                })
 
         } catch (error) {
             console.log(error)
@@ -254,12 +263,29 @@ exports.postResetEmail = (req, res, next) => {
 
             req.flash('message', 'Berhasil minta reset password, check email Anda!')
             res.redirect('/login')
-            return transporter.sendMail({
-                to: req.body.email,
-                from: FROM_EMAIL,
-                subject: 'Reset Password Confirmation!',
-                html:`<p>Anda meminta reset password</p> <p>Click <a href="http://localhost:3000/reset_password/${token}">Link Ini</a> untuk set password baru</p> <p>Link terlampir hanya berlaku 1 Jam</p>`
-            })
+            return await mailjet
+                .post("send", {'version': 'v3.1'})
+                .request({
+                    "Messages":[
+                        {
+                            "From": {
+                                "Email": FROM_EMAIL,
+                                "Name": "Auth Login"
+                            },
+                            "To": [
+                                {
+                                    "Email": req.body.email,
+                                    "Name": user.nama
+                                }
+                            ],
+                            "Subject": 'Reset Password Confirmation!',
+                            "TextPart": "Reset Pass",
+                            "HTMLPart": `<p>Anda meminta reset password</p> <p>Click <a href="http://localhost:3000/reset_password/${token}">Link Ini</a> untuk set password baru</p> <p>Link terlampir hanya berlaku 1 Jam</p>`,
+                            "CustomID": "AppGettingStartedTest"
+                        }
+                    ]
+                })
+
 
         } catch (e) {
             console.log(e)
