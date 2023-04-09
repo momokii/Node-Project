@@ -1,6 +1,6 @@
 //* Const
-const DB_NAME = 'login-prjct1'
-const MONGODB_URI = 'mongodb+srv://kelana-learn1:kelana-learn1@cluster-learn.8zudfto.mongodb.net/' + DB_NAME
+const DB_NAME = 'DB_NAME'
+const MONGODB_URI = 'MONGODB_URI' + DB_NAME
 
 //* import dependencies
 const path = require('path')
