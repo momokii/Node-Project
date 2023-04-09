@@ -10,10 +10,10 @@ const httpStatus = require('../util/httpStatus').httpStatus_keyValue
 //* set Transporter email
 const transporter = nodemailer.createTransport(sendgridTransport({
     auth: {
-        api_key : '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'
+        api_key : 'API_KEY'
     }
 }))
-const FROM_EMAIL = 'kelanachandra7@gmail.com'
+const FROM_EMAIL = 'YOUR_EMAIL'
 
 
 //* import models
