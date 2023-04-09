@@ -13,13 +13,13 @@ const httpStatus = require('../util/httpStatus').httpStatus_keyValue
 const User = require('../models/users')
 
 //* const DEFINED
-const FROM_EMAIL = "kelanachandra7@gmail.com"
-const SECRET_KEY_JWT = "bismillah3periode"
+const FROM_EMAIL = "YOUR_EMAIL"
+const SECRET_KEY_JWT = "SECRET_KEY"
 
 //* config sendgrid / mail sender
 const transporter = nodemailer.createTransport(sendgridTransport({
     auth: {
-        api_key: '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'
+        api_key: 'API_KEY'
     }
 }))
 
