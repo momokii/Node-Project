@@ -55,15 +55,7 @@ const specs = swaggerJsDoc(swaggerUIOptions)
 const app = express()
 
 app.use(bodyParser.json()) // * JSON Input needed
-app.use(cors()) //* with module
-
-// * manual cors setting
-// app.use((req, res, next) => {
-//     res.setHeader('Access-Control-Allow-Origin', "*")
-//     res.setHeader('Access-Control-Allow-Methods', "*")
-//     res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization')
-//     next()
-// })
+app.use(cors())
 
 
 app.use("/api-docs", swaggerUI.serve, swaggerUI.setup(specs))
