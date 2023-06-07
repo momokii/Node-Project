@@ -14,6 +14,7 @@ Selain itu mungkin jika teman - teman berminat dengan tulisan saya, kadang saya 
 
 **Berikut beberapa kontak yang saya sediakan**
 
+- [Personal Website](https://kelanach.cyclic.app/ "Personal")
 - [Email](mailto:kelanachandra7@gmail.com "Email")
 - [Instagram](https://www.instagram.com/kelanach/ "Instagram")
 - [LinkedIn](https://www.linkedin.com/in/kelanach/ "LinkedIn")
